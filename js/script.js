@@ -123,7 +123,50 @@ function readBlob(start, end, callback) {
   binaryReader.readAsBinaryString(blob);
 }
 
+function readSOF0(start) {
+  function loadCallback(data, hexArray) {
+    var identifier = hexArray[0] + hexArray[1];
+    var lengthHex = hexArray[2] + hexArray[3];
+    var precisionHex = hexArray[4];
+    var heightHex = hexArray[5] + hexArray[6];
+    var widthHex = hexArray[7] + hexArray[8];
+    var componentHex = hexArray[9];
 
+    var length = parseInt(lengthHex, 16);
+    var precision = parseInt(precisionHex, 16);
+    var height = parseInt(heightHex, 16);
+    var width = parseInt(widthHex, 16);
+    var component = parseInt(componentHex, 16);
+
+    console.log("Start of Frame 0");
+    console.log("identifier", identifier);
+    console.log("length", length);
+    console.log("precision", precision);
+    console.log("height", height);
+    console.log("width", width);
+    console.log("component", component);
+
+    var componentMap = [ '', 'Y', 'Cb', 'Cr', 'I', 'Q' ];
+    for (var i = 0; i < component; i++) {
+      var componentIdHex = hexArray[10 + i*3 + 0];
+      var samplingFactorsHex = hexArray[10 + i*3 + 1];
+      var quantizationTableNumberHex = hexArray[10 + i*3 + 2];
+      var componentId = parseInt(componentIdHex, 16);
+      var samplingFactorsVert = parseInt(samplingFactorsHex.charAt(0), 16);
+      var samplingFactorsHorz = parseInt(samplingFactorsHex.charAt(1), 16);
+      var componentType = componentMap[componentId];
+      var quantizationTableNumber = parseInt(quantizationTableNumberHex, 16);
+      console.log("component", i+1);
+
+      console.log("componentType", componentType);
+      console.log("samplingFactorsVert", samplingFactorsVert);
+      console.log("samplingFactorsHorz", samplingFactorsHorz);
+      console.log("quantizationTableNumber", quantizationTableNumber);
+    }
+
+  }
+  readBlob(start, start + 19, loadCallback);
+}
 function searchForMarkers() {
   // Load n bytes at a time
   var file = window.settings.currentFile;
