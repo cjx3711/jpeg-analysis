@@ -14,6 +14,13 @@ window.settings = {
       DHT: [],
       SOS: [],
       EOI: []
+    },
+    SOF0: {
+      length: 0,
+      precision: 0,
+      height: 0,
+      width: 0,
+      component: []
     }
   }
 }
@@ -138,13 +145,21 @@ function readSOF0(start) {
     var width = parseInt(widthHex, 16);
     var component = parseInt(componentHex, 16);
 
-    console.log("Start of Frame 0");
-    console.log("identifier", identifier);
-    console.log("length", length);
-    console.log("precision", precision);
-    console.log("height", height);
-    console.log("width", width);
-    console.log("component", component);
+    // console.log("Start of Frame 0");
+    // console.log("identifier", identifier);
+    // console.log("length", length);
+    // console.log("precision", precision);
+    // console.log("height", height);
+    // console.log("width", width);
+    // console.log("component", component);
+
+    var SOF0Data = {
+      length: length,
+      precision: precision,
+      height: height,
+      width: width,
+      component: []
+    }
 
     var componentMap = [ '', 'Y', 'Cb', 'Cr', 'I', 'Q' ];
     for (var i = 0; i < component; i++) {
@@ -156,18 +171,28 @@ function readSOF0(start) {
       var samplingFactorsHorz = parseInt(samplingFactorsHex.charAt(1), 16);
       var componentType = componentMap[componentId];
       var quantizationTableNumber = parseInt(quantizationTableNumberHex, 16);
-      console.log("component", i+1);
 
-      console.log("componentType", componentType);
-      console.log("samplingFactorsVert", samplingFactorsVert);
-      console.log("samplingFactorsHorz", samplingFactorsHorz);
-      console.log("quantizationTableNumber", quantizationTableNumber);
+      // console.log("component", i+1);
+      // console.log("componentType", componentType);
+      // console.log("samplingFactorsVert", samplingFactorsVert);
+      // console.log("samplingFactorsHorz", samplingFactorsHorz);
+      // console.log("quantizationTableNumber", quantizationTableNumber);
+
+      var componentData = {
+        type: componentType,
+        samplingFactorsHorz: samplingFactorsHorz,
+        samplingFactorsVert: samplingFactorsVert,
+        quantizationTableID: quantizationTableNumber
+      }
+      SOF0Data.component.push( componentData );
     }
 
+    window.settings.fileData.SOF0 = SOF0Data;
   }
+
   readBlob(start, start + 19, loadCallback);
 }
-function searchForMarkers() {
+function searchForMarkers(callback) {
   // Load n bytes at a time
   var file = window.settings.currentFile;
   if (file == null) {
@@ -184,31 +209,31 @@ function searchForMarkers() {
       switch( potentialMarker ) {
         case "FFD8":
           window.settings.fileData.markers.SOI.push(cursor + i);
-          console.log("SOI Marker found at: " + (cursor + i));
+          // console.log("SOI Marker found at: " + (cursor + i));
         break;
         case "FFE0":
           window.settings.fileData.markers.APP0.push(cursor + i);
-          console.log("APP0 Marker found at: " + (cursor + i));
+          // console.log("APP0 Marker found at: " + (cursor + i));
         break;
         case "FFDB":
           window.settings.fileData.markers.DQT.push(cursor + i);
-          console.log("DQT Marker found at: " + (cursor + i));
+          // console.log("DQT Marker found at: " + (cursor + i));
         break;
         case "FFC0":
           window.settings.fileData.markers.SOF0.push(cursor + i);
-          console.log("SOF0 Marker found at: " + (cursor + i));
+          // console.log("SOF0 Marker found at: " + (cursor + i));
         break;
         case "FFC4":
           window.settings.fileData.markers.DHT.push(cursor + i);
-          console.log("DHT Marker found at: " + (cursor + i));
+          // console.log("DHT Marker found at: " + (cursor + i));
         break;
         case "FFDA":
           window.settings.fileData.markers.SOS.push(cursor + i);
-          console.log("SOS Marker found at: " + (cursor + i));
+          // console.log("SOS Marker found at: " + (cursor + i));
         break;
         case "FFD9":
           window.settings.fileData.markers.EOI.push(cursor + i);
-          console.log("EOI Marker found at: " + (cursor + i));
+          // console.log("EOI Marker found at: " + (cursor + i));
         break;
       }
     }
@@ -217,8 +242,9 @@ function searchForMarkers() {
     if ( cursor < file.size && cursor < maxBytes) {
       readBlob(cursor, cursor + bytesToLoad + 1, loadCallback);
     } else {
-      console.log("Done");
-      console.log(window.settings.fileData.markers);
+      if ( typeof callback == 'function' ) {
+        callback();
+      }
     }
   }
 
@@ -240,8 +266,15 @@ $(document).ready( function() {
   dropZone.addEventListener('dragover', handleDragOver, false);
   dropZone.addEventListener('drop', handleFileSelect, false);
 
+  function readHeaders() {
+    var imageCount = window.settings.fileData.markers.SOF0.length;
+    var SOF0Index = window.settings.fileData.markers.SOF0[imageCount - 1];
+    readSOF0(SOF0Index);
+
+    console.log("Done");
+  }
   $("#process").click( function(evt) {
-    searchForMarkers();
+    searchForMarkers(readHeaders);
   });
 
 });
