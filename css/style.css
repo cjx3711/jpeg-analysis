@@ -1,0 +1,18 @@
+.hide {
+  display:none;
+}
+
+#drop-zone {
+    border: 2px dashed #bbb;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    padding: 25px;
+    text-align: center;
+    color: #bbb;
+}
+
+
+img.thumb {
+  width: 100px;
+}
