@@ -2,7 +2,7 @@
  * Reads the huffman tables at the given start byte
  * and puts it in the global settings variable
  * @method readHuffTable
- * @param  {[type]}       start Start byte in the file
+ * @param  [int]       start Start byte in the file
  */
 function readHuffTable(start) {
   var length = 0;

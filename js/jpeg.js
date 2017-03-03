@@ -1,3 +1,5 @@
+var componentMap = [ '', 'Y', 'Cb', 'Cr', 'I', 'Q' ];
+
 /**
  * Reads the start of file tables at the given start byte
  * and puts it in the global settings variable
@@ -39,7 +41,6 @@ function readSOF0(start) {
       component: []
     }
 
-    var componentMap = [ '', 'Y', 'Cb', 'Cr', 'I', 'Q' ];
     for (var i = 0; i < component; i++) {
       var componentIdHex = hexArray[10 + i*3 + 0];
       var samplingFactorsHex = hexArray[10 + i*3 + 1];

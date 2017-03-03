@@ -1,4 +1,11 @@
 
+/**
+ * Maps a 64 length array into a 2D
+ * array with a zig zag pattern
+ * @method zigzagArray
+ * @param  {array}    array Number array of size 64
+ * @return {array[array]}    zig zag array
+ */
 function zigzagArray(array) {
   var arrayMap = [[0, 0],[1, 0],[0, 1],[0, 2],[1, 1],[2, 0],[3, 0],[2, 1],[1, 2],[0, 3],[0, 4],[1, 3],[2, 2],[3, 1],[4, 0],[5, 0],[4, 1],[3, 2],[2, 3],[1, 4],[0, 5],[0, 6],[1, 5],[2, 4],[3, 3],[4, 2],[5, 1],[6, 0],[7, 0],[6, 1],[5, 2],[4, 3],[3, 4],[2, 5],[1, 6],[0, 7],[1, 7],[2, 6],[3, 5],[4, 4],[5, 3],[6, 2],[7, 1],[7, 2],[6, 3],[5, 4],[4, 5],[3, 6],[2, 7],[3, 7],[4, 6],[5, 5],[6, 4],[7, 3],[7, 4],[6, 5],[5, 6],[4, 7],[5, 7],[6, 6],[7, 5],[7, 6],[6, 7],[7, 7]];
   if ( array.length != 64 ) {
@@ -20,6 +27,11 @@ function zigzagArray(array) {
   return array2d;
 }
 
+/**
+ * Prints any given 2D array
+ * @method print2DArray
+ * @param  {array[array]}     array2d Array to print
+ */
 function print2DArray( array2d ) {
   for (var y = 0; y < array2d.length; y++) {
     console.log(array2d[y].join(" "));
@@ -30,7 +42,7 @@ function print2DArray( array2d ) {
  * Reads the quantization tables at the given start byte
  * and puts it in the global settings variable
  * @method readQuantTable
- * @param  {[type]}       start Start byte in the file
+ * @param  {int}       start Start byte in the file
  */
 function readQuantTable(start) {
   var length = 0;

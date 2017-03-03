@@ -3,7 +3,7 @@
 // https://www.youtube.com/watch?v=Q2aEzeMDHMA
 // http://imrannazar.com/Let's-Build-a-JPEG-Decoder%3A-Huffman-Tables
 // http://www.impulseadventure.com/photo/jpeg-huffman-coding.html
-
+// https://github.com/enmasse/jpeg_read/blob/master/jpeg_read.py
 window.settings = {
   fileAPI: false,
   currentFile: null,
@@ -28,7 +28,8 @@ window.settings = {
       length:0,
       tables: []
     },
-    DHT: {}
+    DHT: {},
+    scanData: {}
   }
 }
 
@@ -185,6 +186,8 @@ $(document).ready( function() {
     var huffIndex = window.settings.fileData.markers.DHT[imageCount - 1];
     readHuffTable(huffIndex);
 
+
+
     console.log("Done");
   }
   $("#process").click( function(evt) {
@@ -193,5 +196,11 @@ $(document).ready( function() {
 
   $("#display").click( function(evt) {
     displayQuantTable();
+  });
+
+  $("#read-data").click( function(evt) {
+    var imageCount = window.settings.fileData.markers.SOF0.length;
+    var SOS = window.settings.fileData.markers.SOS[imageCount - 1];
+    readSOS(SOS);
   });
 });
