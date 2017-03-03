@@ -27,7 +27,8 @@ window.settings = {
     QT: {
       length:0,
       tables: []
-    }
+    },
+    DHT: {}
   }
 }
 
@@ -180,6 +181,10 @@ $(document).ready( function() {
 
     var quantIndex = window.settings.fileData.markers.DQT[imageCount - 1];
     readQuantTable(quantIndex);
+
+    var huffIndex = window.settings.fileData.markers.DHT[imageCount - 1];
+    readHuffTable(huffIndex);
+
     console.log("Done");
   }
   $("#process").click( function(evt) {

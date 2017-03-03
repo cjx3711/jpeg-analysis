@@ -97,6 +97,93 @@ function print2DArray( array2d ) {
     console.log(array2d[y].join(" "));
   }
 }
+
+/**
+ * Reads the huffman tables at the given start byte
+ * and puts it in the global settings variable
+ * @method readHuffTable
+ * @param  {[type]}       start Start byte in the file
+ */
+function readHuffTable(start) {
+  var length = 0;
+  var huffData = {
+    length: 0,
+    tables: []
+  }
+
+  function loadCallback(data, hexArray) {
+    var cursor = 0;
+    console.log(cursor, length);
+    while (cursor < length) {
+      console.log(cursor, length);
+      var huffTable = {
+        number: 0,
+        type: '',
+        data: {}
+      }
+      // The data used for generating the tree
+      // The tree will be used to generate the bitstrings later oncam
+      var huffTreeData = {
+        totalSymbols: 0,
+        symbolCount: [], // Size 16
+        symbolList: []
+      }
+
+      // Get HT information
+      console.log(hexArray[cursor]);
+      var HTNumberHex = hexArray[cursor].charAt(0);
+      var HTNumber = parseInt(HTNumberHex, 16);
+      var HTType = hexArray[cursor].charAt(1) == '1' ? 'AC' : 'DC';
+
+      huffTable.number = HTNumber;
+      huffTable.type = HTType;
+      cursor++;
+
+      //Get number of symbols
+      var totalSymbols = 0;
+      for (var i = 0; i < 16; i++) {
+        var count = parseInt(hexArray[cursor], 16);
+        huffTreeData.symbolCount.push(count);
+        totalSymbols += count;
+        cursor++;
+      }
+      huffTreeData.totalSymbols = totalSymbols;
+
+      // Get symbols
+      huffTreeData.symbolCount.forEach( function(symbolCount) {
+        var symbols = [];
+        for (var i = 0; i < symbolCount; i++) {
+          var symbol = hexArray[cursor];
+          symbols.push(symbol);
+          cursor++;
+        }
+        huffTreeData.symbolList.push(symbols);
+      });
+
+      huffTable.temp = huffTreeData;
+      huffData.tables.push(huffTable);
+      console.log(cursor, length);
+
+    }
+
+    window.settings.fileData.DHT = huffData;
+  }
+  function headerLoadCallback(data, hexArray) {
+    var identifier = hexArray[0] + hexArray[1];
+    if ( identifier != 'FFC4' ) {
+      console.log("Can't read DQT");
+      return;
+    }
+    var lengthHex = hexArray[2] + hexArray[3];
+    console.log(lengthHex);
+    length = parseInt(lengthHex, 16) - 2;
+    huffData.length = length;
+    var byteAfterLength = start + 4;
+    var bytesWithoutLength = byteAfterLength + length;
+    readBlob(byteAfterLength, bytesWithoutLength, loadCallback);
+  }
+  readBlob(start, start + 4, headerLoadCallback);
+}
 /**
  * Reads the quantization tables at the given start byte
  * and puts it in the global settings variable
@@ -111,8 +198,7 @@ function readQuantTable(start) {
   }
   function loadCallback(data, hexArray) {
     var cursor = 0;
-    // The 2 is the bytes of the "length"
-    while ( cursor < QTData.length - 2 ) {
+    while ( cursor < QTData.length ) {
       var tableData = {
         precision: 0,
         number: 0,
@@ -153,11 +239,11 @@ function readQuantTable(start) {
     }
     var lengthHex = hexArray[2] + hexArray[3];
     console.log(lengthHex);
-    length = parseInt(lengthHex, 16);
+    length = parseInt(lengthHex, 16) - 2; // 2 is the size of the length variable itself
     QTData.length = length;
-    var byteAfterLenth = start + 4;
-    var bytesWithoutLength = byteAfterLenth - 2; // 2 is the bytes that "length" takes up
-    readBlob(byteAfterLenth, start + 4 + length - 2, loadCallback);
+    var byteAfterLength = start + 4;
+    var bytesWithoutLength = byteAfterLength + length;
+    readBlob(byteAfterLength, bytesWithoutLength, loadCallback);
   }
   readBlob(start, start + 4, headerLoadCallback);
 }
