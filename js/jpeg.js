@@ -1,6 +1,16 @@
+/**
+ * Reads the start of file tables at the given start byte
+ * and puts it in the global settings variable
+ * @method readQuantTable
+ * @param  {[type]}       start Start byte in the file
+ */
 function readSOF0(start) {
   function loadCallback(data, hexArray) {
     var identifier = hexArray[0] + hexArray[1];
+    if ( identifier != 'FFC0' ) {
+      console.log("Can't read SOF0");
+      return;
+    }
     var lengthHex = hexArray[2] + hexArray[3];
     var precisionHex = hexArray[4];
     var heightHex = hexArray[5] + hexArray[6];
@@ -60,6 +70,77 @@ function readSOF0(start) {
 
   readBlob(start, start + 19, loadCallback);
 }
+
+/**
+ * Reads the quantization tables at the given start byte
+ * and puts it in the global settings variable
+ * @method readQuantTable
+ * @param  {[type]}       start Start byte in the file
+ */
+function readQuantTable(start) {
+  var length = 0;
+  var QTData = {
+    length: 0,
+    table: []
+  }
+  function loadCallback(data, hexArray) {
+    var cursor = 0;
+    // The 2 is the bytes of the "length"
+    while ( cursor < QTData.length - 2 ) {
+      var tableData = {
+        precision: 0,
+        number: 0,
+        data: [],
+      }
+      console.log("Start",cursor);
+      var QTPrecisionHex = hexArray[cursor].charAt(0);
+      var QTNumberHex = hexArray[cursor].charAt(1);
+      var QTPrecision = QTPrecisionHex == '0' ? 0 : 1;
+      var QTNumber = parseInt(QTNumberHex, 16);
+      cursor += 1;
+      tableData.precision = QTPrecision;
+      tableData.number = QTNumber;
+      var QTBytes = 64 * (QTPrecision + 1);
+      for (var i = 0; i < 64; i++) {
+        var valueHex = hexArray[cursor];
+        if ( QTPrecision == 1 ) {
+          valueHex += hexArray[cursor+1];
+        }
+        var value = parseInt(valueHex, 16);
+        tableData.data.push(value);
+        cursor += QTPrecision + 1;
+      }
+      console.log("End", cursor);
+
+      QTData.table.push(tableData);
+    }
+
+    window.settings.fileData.QT = QTData;
+    console.log(window.settings.fileData.QT);
+  }
+  function headerLoadCallback(data, hexArray) {
+    var identifier = hexArray[0] + hexArray[1];
+    if ( identifier != 'FFDB' ) {
+      console.log("Can't read DQT");
+      return;
+    }
+    var lengthHex = hexArray[2] + hexArray[3];
+    console.log(lengthHex);
+    length = parseInt(lengthHex, 16);
+    QTData.length = length;
+    var byteAfterLenth = start + 4;
+    var bytesWithoutLength = byteAfterLenth - 2; // 2 is the bytes that "length" takes up
+    readBlob(byteAfterLenth, start + 4 + length - 2, loadCallback);
+  }
+  readBlob(start, start + 4, headerLoadCallback);
+}
+
+/**
+ * Search for the JPEG markers
+ * @method searchForMarkers
+ * @param  {Function}       callback Callback after markers are found
+ * @return {[type]}                  [description]
+ */
 function searchForMarkers(callback) {
   // Load n bytes at a time
   var file = window.settings.currentFile;

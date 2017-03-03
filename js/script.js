@@ -1,6 +1,8 @@
 // Reference:
 // http://vip.sugovica.hu/Sardi/kepnezo/JPEG%20File%20Layout%20and%20Format.htm
 // https://www.youtube.com/watch?v=Q2aEzeMDHMA
+// http://imrannazar.com/Let's-Build-a-JPEG-Decoder%3A-Huffman-Tables
+// http://www.impulseadventure.com/photo/jpeg-huffman-coding.html
 
 window.settings = {
   fileAPI: false,
@@ -21,6 +23,10 @@ window.settings = {
       height: 0,
       width: 0,
       component: []
+    },
+    QT: {
+      length:0,
+      values: []
     }
   }
 }
@@ -152,6 +158,8 @@ $(document).ready( function() {
     var SOF0Index = window.settings.fileData.markers.SOF0[imageCount - 1];
     readSOF0(SOF0Index);
 
+    var quantIndex = window.settings.fileData.markers.DQT[imageCount - 1];
+    readQuantTable(quantIndex);
     console.log("Done");
   }
   $("#process").click( function(evt) {
