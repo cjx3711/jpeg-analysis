@@ -137,6 +137,26 @@ function readBlob(start, end, callback) {
   binaryReader.readAsBinaryString(blob);
 }
 
+function displayQuantTable() {
+  window.settings.fileData.QT.tables.forEach( function(qtable) {
+    var $qtable = $('<div class="qtable-container"></div>');
+    var $qtabledata = $('<div class="qtable-data"></div>');
+    $qtabledata.html("Table number: " + qtable.number + " precision: " + qtable.precision);
+    $qtable.append($qtabledata);
+    qtable.data2d.forEach( function(qtablerow) {
+      var $qtablerow = $('<div class="qtable-row"></div>');
+      qtablerow.forEach(function(qtablevalue) {
+        var $qtableval = $('<input class="qtable-value"/>');
+        $qtableval.val(qtablevalue);
+        $qtablerow.append($qtableval);
+      });
+      $qtable.append($qtablerow);
+    });
+    $("#quant-tables").append($qtable);
+  });
+
+}
+
 $(document).ready( function() {
 
   // Check for the various File API support.
@@ -166,4 +186,7 @@ $(document).ready( function() {
     searchForMarkers(readHeaders);
   });
 
+  $("#display").click( function(evt) {
+    displayQuantTable();
+  });
 });

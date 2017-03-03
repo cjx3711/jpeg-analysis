@@ -16,3 +16,20 @@
 img.thumb {
   width: 100px;
 }
+
+#quant-tables {
+
+}
+
+#quant-tables .qtable-container {
+  padding: 5px;
+}
+
+#quant-tables .qtable-container .qtable-row {
+
+}
+
+#quant-tables .qtable-container .qtable-row .qtable-value{
+  width: 25px;
+  height: 25px
+}
