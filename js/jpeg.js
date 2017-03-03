@@ -119,13 +119,14 @@ function readHuffTable(start) {
       var huffTable = {
         number: 0,
         type: '',
-        data: {}
+        map: {}, // Actual map data
+        tree: {} // Used for processing and tree storing
       }
       // The data used for generating the tree
       // The tree will be used to generate the bitstrings later oncam
       var huffTreeData = {
         totalSymbols: 0,
-        symbolCount: [], // Size 16
+        symbolCount: [], // Should be size 16
         symbolList: []
       }
 
@@ -160,13 +161,15 @@ function readHuffTable(start) {
         huffTreeData.symbolList.push(symbols);
       });
 
-      huffTable.temp = huffTreeData;
+      huffTable.tree = huffTreeData;
       huffData.tables.push(huffTable);
       console.log(cursor, length);
 
     }
 
     window.settings.fileData.DHT = huffData;
+
+    generateHuffTree();
   }
   function headerLoadCallback(data, hexArray) {
     var identifier = hexArray[0] + hexArray[1];
@@ -183,6 +186,81 @@ function readHuffTable(start) {
     readBlob(byteAfterLength, bytesWithoutLength, loadCallback);
   }
   readBlob(start, start + 4, headerLoadCallback);
+
+  function newNode(node, side) {
+    node[side] = {
+      0: null,
+      1: null,
+      level: node.level + 1
+    };
+    return node[side];
+  }
+  function generateHuffTree() {
+    huffData.tables.forEach( function(table) {
+      var layerList = [];
+      var nextLayerList = [];
+      var rootNode = {
+        0: null,
+        1: null,
+        level: 0
+      };
+
+      layerList.push(rootNode);
+      var symbolsProcessed = 0;
+      for (var i = 0; i < table.tree.symbolList.length; i++) {
+        var symList = table.tree.symbolList[i];
+        // Fill up the symbol nodes
+        var N = 0;
+        for (var j = 0; j < symList.length; j++) {
+          var symbol = symList[j];
+          N = Math.floor(j/2);
+          layerList[N][j%2] = symbol;
+          symbolsProcessed++;
+        }
+        if ( symbolsProcessed >= table.tree.totalSymbols ) {
+          break;
+        }
+        // Fill in the rest with another node
+        for (var n = N; n < layerList.length; n++) {
+          if ( layerList[n][0] == null ) {
+            nextLayerList.push(newNode(layerList[n], 0));
+          }
+          if ( layerList[n][1] == null ) {
+            nextLayerList.push(newNode(layerList[n], 1));
+          }
+        }
+        // Reset the layer list
+        layerList = nextLayerList;
+        nextLayerList = [];
+      }
+
+      // Delete temp data by replacing with tree
+      table.tree = rootNode;
+    });
+
+    generateHuffTable();
+  }
+
+  function generateHuffTable() {
+    function traverse(node, bitString, map) {
+      for (var i = 0; i < 2; i++) {
+        if ( node[i] != null ) {
+          if ( node[i].hasOwnProperty('level') ) {
+            traverse(node[i], bitString + i, map);
+          } else { // Node is leaf
+            map[bitString] = node[i];
+          }
+        }
+      }
+    }
+    huffData.tables.forEach( function(table) {
+      var rootNode = table.tree;
+      var map = {};
+      traverse(rootNode, '', map);
+      table.map = map;
+      delete table.tree; // Remove all workings
+    });
+  }
 }
 /**
  * Reads the quantization tables at the given start byte
