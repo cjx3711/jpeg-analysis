@@ -26,7 +26,7 @@ window.settings = {
     },
     QT: {
       length:0,
-      values: []
+      tables: []
     }
   }
 }
